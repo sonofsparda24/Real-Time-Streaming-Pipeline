@@ -1,0 +1,60 @@
+Nov 28 07:41:05 worker-03 nginx: UFW BLOCK: IN=eth0 SRC=192.168.1.22 DST=192.168.1.5
+Nov 28 07:41:06 auth-01 apache2: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:06 gateway-01 nginx: Failed password for admin from 8.8.8.8 port 22 ssh2
+Nov 28 07:41:07 auth-01 kernel: CRON[987]: (root) CMD (/usr/bin/backup.sh)
+Nov 28 07:41:07 web-01 kernel: [client 10.0.0.5] File does not exist: /var/www/favicon.ico
+Nov 28 07:41:08 db-01 sshd: access log: "GET /index.html" 200 from 172.16.0.9
+Nov 28 07:41:08 worker-03 docker: access log: "POST /index.html" 200 from 8.8.8.8
+Nov 28 07:41:09 web-01 sshd: Failed password for ubuntu from 8.8.8.8 port 22 ssh2
+Nov 28 07:41:09 db-01 docker: access log: "GET /index.html" 200 from 192.168.1.10
+Nov 28 07:41:10 db-01 cron: user ubuntu executed command: /usr/bin/apt update
+Nov 28 07:41:10 db-01 nginx: user www-data executed command: /usr/bin/apt update
+Nov 28 07:41:11 gateway-01 nginx: UFW BLOCK: IN=eth0 SRC=10.0.0.5 DST=192.168.1.5
+Nov 28 07:41:11 web-01 docker: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:12 gateway-01 sudo: docker: Container restarted: app_container_01
+Nov 28 07:41:12 gateway-01 cron: access log: "POST /index.html" 200 from 8.8.8.8
+Nov 28 07:41:13 db-01 nginx: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:13 auth-01 apache2: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:14 web-01 systemd: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:14 auth-01 cron: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:15 worker-03 apache2: CRON[987]: (root) CMD (/usr/bin/backup.sh)
+Nov 28 07:41:15 worker-03 docker: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:16 gateway-01 sshd: UFW BLOCK: IN=eth0 SRC=192.168.1.22 DST=192.168.1.5
+Nov 28 07:41:16 web-01 sudo: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:17 web-01 sshd: [client 10.0.0.5] File does not exist: /var/www/favicon.ico
+Nov 28 07:41:17 web-01 systemd: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:18 cache-01 nginx: access log: "GET /index.html" 200 from 8.8.8.8
+Nov 28 07:41:18 db-01 kernel: docker: Container restarted: app_container_01
+Nov 28 07:41:19 worker-03 sshd: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:19 auth-01 kernel: user ubuntu executed command: /usr/bin/apt update
+Nov 28 07:41:20 auth-01 sshd: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:20 auth-01 ufw: Failed password for root from 192.168.1.22 port 22 ssh2
+Nov 28 07:41:21 db-01 mysql: user deploy executed command: /usr/bin/apt update
+Nov 28 07:41:21 cache-01 kernel: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:22 web-01 sshd: [client 192.168.1.22] File does not exist: /var/www/favicon.ico
+Nov 28 07:41:22 web-01 sshd: docker: Container restarted: app_container_01
+Nov 28 07:41:23 cache-01 cron: user deploy executed command: /usr/bin/apt update
+Nov 28 07:41:23 auth-01 apache2: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:24 web-01 mysql: CRON[987]: (root) CMD (/usr/bin/backup.sh)
+Nov 28 07:41:24 auth-01 apache2: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:25 worker-03 ufw: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:25 cache-01 systemd: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:26 web-01 sshd: docker: Container restarted: app_container_01
+Nov 28 07:41:26 gateway-01 sshd: [client 192.168.1.22] File does not exist: /var/www/favicon.ico
+Nov 28 07:41:27 gateway-01 systemd: UFW BLOCK: IN=eth0 SRC=8.8.8.8 DST=192.168.1.5
+Nov 28 07:41:27 cache-01 cron: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:28 cache-01 apache2: UFW BLOCK: IN=eth0 SRC=192.168.1.10 DST=192.168.1.5
+Nov 28 07:41:28 gateway-01 ufw: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:29 web-01 nginx: UFW BLOCK: IN=eth0 SRC=192.168.1.22 DST=192.168.1.5
+Nov 28 07:41:29 cache-01 cron: Failed password for ubuntu from 172.16.0.9 port 22 ssh2
+Nov 28 07:41:30 gateway-01 sshd: systemd: Starting Daily apt upgrade and clean activities...
+Nov 28 07:41:30 db-01 nginx: kernel: CPU temperature above threshold, cpu clock throttled
+Nov 28 07:41:31 gateway-01 systemd: UFW BLOCK: IN=eth0 SRC=10.0.0.5 DST=192.168.1.5
+Nov 28 07:41:31 worker-03 mysql: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:32 web-01 nginx: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:32 db-01 kernel: mysql: Slow query detected on table users (execution: 4.2 sec)
+Nov 28 07:41:33 cache-01 sudo: [client 8.8.8.8] File does not exist: /var/www/favicon.ico
+Nov 28 07:41:33 worker-03 kernel: CRON[987]: (root) CMD (/usr/bin/backup.sh)
+Nov 28 07:41:34 gateway-01 systemd: access log: "GET /index.html" 200 from 10.0.0.5
+Nov 28 07:41:34 auth-01 cron: UFW BLOCK: IN=eth0 SRC=10.0.0.5 DST=192.168.1.5
+Nov 28 07:41:35 auth-01 apache2: access log: "POST /index.html" 200 from 172.16.0.9

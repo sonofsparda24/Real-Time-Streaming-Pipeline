@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+
+  ##########################################################################
+  # ZOOKEEPER (Confluent)
+  ##########################################################################
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  ##########################################################################
+  # KAFKA (Confluent)
+  ##########################################################################
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - ./docker/kafka/data:/var/lib/kafka/data
+      - ./docker/kafka/logs:/var/lib/kafka/logs
+
+  ##########################################################################
+  # HDFS NAMENODE
+  ##########################################################################
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=hdfs-cluster
+    ports:
+      - "9870:9870"     # NameNode Web UI
+      - "9000:9000"     # HDFS RPC
+    volumes:
+      - ./docker/hdfs/namenode:/hadoop/dfs/name
+
+  ##########################################################################
+  # HDFS DATANODE
+  ##########################################################################
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    depends_on:
+      - namenode
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870
+    volumes:
+      - ./docker/hdfs/datanode:/hadoop/dfs/data
+
+  ##########################################################################
+  # SYSLOG-NG
+  ##########################################################################
+  syslog-ng:
+    image: balabit/syslog-ng:latest
+    container_name: syslog-ng
+    ports:
+      - "5514:5514/udp"
+      - "6514:6514/tcp"
+    volumes:
+      - ./docker/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf:ro
+    depends_on:
+      - kafka
+
+  ##########################################################################
+  # SPARK MASTER (Apache)
+  ##########################################################################
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: spark-master
+    entrypoint: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    ports:
+      - "7077:7077"
+      - "8080:8080"   # Spark Master Web UI
+    volumes:
+      - ./spark/:/opt/spark-apps/
+
+  ##########################################################################
+  # SPARK WORKER (Apache)
+  ##########################################################################
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    entrypoint: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    ports:
+      - "8081:8081"   # Spark Worker Web UI
+    volumes:
+      - ./spark/:/opt/spark-apps/
+
+networks:
+  default:
+    name: bigdata-network
