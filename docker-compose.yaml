@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
 
@@ -12,6 +12,8 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
     ports:
       - "2181:2181"
+    networks:
+      - bigdata-network
 
   ##########################################################################
   # KAFKA (Confluent)
@@ -32,6 +34,8 @@ services:
     volumes:
       - ./docker/kafka/data:/var/lib/kafka/data
       - ./docker/kafka/logs:/var/lib/kafka/logs
+    networks:
+      - bigdata-network
 
   ##########################################################################
   # HDFS NAMENODE
@@ -46,6 +50,8 @@ services:
       - "9000:9000"     # HDFS RPC
     volumes:
       - ./docker/hdfs/namenode:/hadoop/dfs/name
+    networks:
+      - bigdata-network
 
   ##########################################################################
   # HDFS DATANODE
@@ -59,6 +65,8 @@ services:
       - SERVICE_PRECONDITION=namenode:9870
     volumes:
       - ./docker/hdfs/datanode:/hadoop/dfs/data
+    networks:
+      - bigdata-network
 
   ##########################################################################
   # SYSLOG-NG
@@ -73,38 +81,50 @@ services:
       - ./docker/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf:ro
     depends_on:
       - kafka
+    networks:
+      - bigdata-network
 
   ##########################################################################
-  # SPARK MASTER (Apache)
+  # SPARK MASTER
   ##########################################################################
   spark-master:
-    image: apache/spark:3.5.0
+    image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
     container_name: spark-master
-    entrypoint: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    entrypoint:
+      ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
     environment:
       SPARK_NO_DAEMONIZE: "true"
     ports:
       - "7077:7077"
-      - "8080:8080"   # Spark Master Web UI
+      - "8080:8080"    # Spark Master UI
     volumes:
       - ./spark/:/opt/spark-apps/
+    networks:
+      - bigdata-network
 
   ##########################################################################
-  # SPARK WORKER (Apache)
+  # SPARK WORKER
   ##########################################################################
   spark-worker:
-    image: apache/spark:3.5.0
+    image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
     container_name: spark-worker
     depends_on:
       - spark-master
-    entrypoint: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    entrypoint:
+      [
+        "/opt/spark/bin/spark-class",
+        "org.apache.spark.deploy.worker.Worker",
+        "spark://spark-master:7077"
+      ]
     environment:
       SPARK_NO_DAEMONIZE: "true"
     ports:
-      - "8081:8081"   # Spark Worker Web UI
+      - "8081:8081"    # Spark Worker UI
     volumes:
       - ./spark/:/opt/spark-apps/
+    networks:
+      - bigdata-network
 
 networks:
-  default:
-    name: bigdata-network
+  bigdata-network:
+    driver: bridge
