@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
 
   ############################################################
@@ -67,21 +69,23 @@ services:
       - bigdata-network
 
   ############################################################
-  # SYSLOG-NG (Balabit — includes Kafka)
+  # SYSLOG-NG (Balabit — correct Kafka module)
   ############################################################
   syslog-ng:
-    image: balabit/syslog-ng:latest
+    image: linuxserver/syslog-ng:4.8.3
     container_name: syslog-ng
     ports:
       - "5514:5514/udp"
       - "6514:6514/tcp"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
-      - ./syslog-ng/config/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-    depends_on:
-      - kafka
-    networks:
-      - bigdata-network
+      - ./syslog-ng/syslog-ng.conf:/config/syslog-ng.conf:ro
     restart: unless-stopped
+
+
 
   ############################################################
   # SPARK MASTER
