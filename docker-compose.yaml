@@ -2,9 +2,9 @@ version: "3.8"
 
 services:
 
-  ##########################################################################
-  # ZOOKEEPER (Confluent)
-  ##########################################################################
+  ############################################################
+  # ZOOKEEPER
+  ############################################################
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -15,9 +15,9 @@ services:
     networks:
       - bigdata-network
 
-  ##########################################################################
-  # KAFKA (Confluent)
-  ##########################################################################
+  ############################################################
+  # KAFKA
+  ############################################################
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
@@ -37,25 +37,25 @@ services:
     networks:
       - bigdata-network
 
-  ##########################################################################
+  ############################################################
   # HDFS NAMENODE
-  ##########################################################################
+  ############################################################
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
     container_name: namenode
     environment:
       - CLUSTER_NAME=hdfs-cluster
     ports:
-      - "9870:9870"     # NameNode Web UI
-      - "9000:9000"     # HDFS RPC
+      - "9870:9870"
+      - "9000:9000"
     volumes:
       - ./docker/hdfs/namenode:/hadoop/dfs/name
     networks:
       - bigdata-network
 
-  ##########################################################################
+  ############################################################
   # HDFS DATANODE
-  ##########################################################################
+  ############################################################
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode
@@ -68,25 +68,30 @@ services:
     networks:
       - bigdata-network
 
-  ##########################################################################
-  # SYSLOG-NG
-  ##########################################################################
+  ############################################################
+  # SYSLOG-NG (LinuxServer / fully working)
+  ############################################################
   syslog-ng:
-    image: balabit/syslog-ng:latest
+    image: linuxserver/syslog-ng:4.8.3
     container_name: syslog-ng
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
     ports:
       - "5514:5514/udp"
       - "6514:6514/tcp"
     volumes:
-      - ./docker/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf:ro
+      - ./syslog-ng/syslog-ng.conf:/config/syslog-ng.conf
     depends_on:
       - kafka
+    restart: unless-stopped
     networks:
       - bigdata-network
 
-  ##########################################################################
+  ############################################################
   # SPARK MASTER
-  ##########################################################################
+  ############################################################
   spark-master:
     image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
     container_name: spark-master
@@ -96,15 +101,15 @@ services:
       SPARK_NO_DAEMONIZE: "true"
     ports:
       - "7077:7077"
-      - "8080:8080"    # Spark Master UI
+      - "8080:8080"
     volumes:
       - ./spark/:/opt/spark-apps/
     networks:
       - bigdata-network
 
-  ##########################################################################
+  ############################################################
   # SPARK WORKER
-  ##########################################################################
+  ############################################################
   spark-worker:
     image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
     container_name: spark-worker
@@ -119,7 +124,7 @@ services:
     environment:
       SPARK_NO_DAEMONIZE: "true"
     ports:
-      - "8081:8081"    # Spark Worker UI
+      - "8081:8081"
     volumes:
       - ./spark/:/opt/spark-apps/
     networks:
