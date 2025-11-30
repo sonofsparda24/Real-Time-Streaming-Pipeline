@@ -1,14 +1,7 @@
-# Docker
-docker/vector/logs/
-docker/vector/config/vector.toml.bak
+docker/vector/logs/*
+*.log
 __pycache__/
 *.pyc
-*.log
-.DS_Store
-.idea/
+*.tar
 .vscode/
-spark-warehouse/
-metastore_db/
-derby.log
-tmp/
-checkpoint/
+.idea/
