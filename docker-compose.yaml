@@ -2,87 +2,95 @@ version: "3.9"
 
 services:
   vector:
-    image: timberio/vector:latest-alpine
+    image: timberio/vector:nightly-debian
     container_name: vector
-    ports:
-      - "514:514/udp"
     volumes:
-      - ./docker/vector/vector.toml:/etc/vector/vector.toml:ro
+      - ./docker/vector/config/vector.toml:/etc/vector/vector.toml:ro
+      - ./docker/vector/logs:/var/log/vector
     depends_on:
       - kafka
-    networks:
-      - pipeline-net
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
+    image: confluentinc/cp-zookeeper:7.6.1
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
     networks:
       - pipeline-net
 
   kafka:
-    image: confluentinc/cp-kafka:7.4.0
+    image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
     depends_on:
       - zookeeper
+    ports:
+      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    ports:
-      - "9092:9092"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     networks:
       - pipeline-net
 
-  spark:
-    build:
-      context: ./docker/spark
-      dockerfile: Dockerfile
-    container_name: spark
-    depends_on:
-      - kafka
-    volumes:
-      - ./spark:/opt/spark-app
-    networks:
-      - pipeline-net
+
+  spark-master:
+    image: apache/spark:3.5.1
+    container_name: spark-master
+    hostname: spark-master
     command: >
-      /bin/bash -c "
-      /opt/spark/bin/spark-submit
-      --master local[*]
-      /opt/spark-app/stream_syslog.py
-      "
-
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
-    volumes:
-      - ./docker/hdfs/namenode:/hadoop/dfs/name
-    environment:
-      - CLUSTER_NAME=cluster1
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      --host spark-master --port 7077 --webui-port 8080
     ports:
-      - "9870:9870"
+      - "7077:7077"
+      - "8080:8080"
     networks:
       - pipeline-net
 
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
+  spark-worker:
+    image: apache/spark:3.5.1
+    container_name: spark-worker
+    hostname: spark-worker
     depends_on:
-      - namenode
-    volumes:
-      - ./docker/hdfs/datanode:/hadoop/dfs/data
-    environment:
-      - CLUSTER_NAME=cluster1
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
     ports:
-      - "9864:9864"
+      - "8081:8081"
+    environment:
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+    networks:
+      - pipeline-net
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      xpack.security.enabled: "false"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - pipeline-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
     networks:
       - pipeline-net
 
