@@ -10,13 +10,14 @@ services:
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
     networks:
       - bigdata-network
 
   ############################################################
-  # KAFKA
+  # KAFKA (using named volumes)
   ############################################################
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -28,64 +29,43 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Recommended listener settings
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      # Safe for single-node cluster
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      # Auto-create topics if desired
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
     volumes:
-      - ./docker/kafka/data:/var/lib/kafka/data
-      - ./docker/kafka/logs:/var/lib/kafka/logs
+      - kafka_data:/var/lib/kafka/data
+      - kafka_logs:/var/lib/kafka/logs
+
     networks:
       - bigdata-network
 
   ############################################################
-  # HDFS NAMENODE
+  # VECTOR (replaces syslog-ng)
   ############################################################
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
-    environment:
-      - CLUSTER_NAME=hdfs-cluster
-    ports:
-      - "9870:9870"
-      - "9000:9000"
-    volumes:
-      - ./docker/hdfs/namenode:/hadoop/dfs/name
-    networks:
-      - bigdata-network
-
-  ############################################################
-  # HDFS DATANODE
-  ############################################################
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
-    depends_on:
-      - namenode
-    environment:
-      - SERVICE_PRECONDITION=namenode:9870
-    volumes:
-      - ./docker/hdfs/datanode:/hadoop/dfs/data
-    networks:
-      - bigdata-network
-
-  ############################################################
-  # SYSLOG-NG (Balabit — correct Kafka module)
-  ############################################################
-  syslog-ng:
-    image: linuxserver/syslog-ng:4.8.3
-    container_name: syslog-ng
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    command: ["--config", "/etc/vector/vector.yaml"]
     ports:
       - "5514:5514/udp"
-      - "6514:6514/tcp"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
     volumes:
-      - ./syslog-ng/syslog-ng.conf:/config/syslog-ng.conf:ro
+      - ./docker/vector/config/vector.yaml:/etc/vector/vector.yaml:ro
+    depends_on:
+      - kafka
     restart: unless-stopped
-
-
+    networks:
+      - bigdata-network
 
   ############################################################
   # SPARK MASTER
@@ -131,3 +111,10 @@ services:
 networks:
   bigdata-network:
     driver: bridge
+
+#############################################################
+# NAMED VOLUMES (FIXED KAFKA METADATA ISSUES)
+#############################################################
+volumes:
+  kafka_data:
+  kafka_logs:

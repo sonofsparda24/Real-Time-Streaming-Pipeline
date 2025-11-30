@@ -1,0 +1,29 @@
+sources:
+  syslog_in:
+    type: "syslog"
+    address: "0.0.0.0:5514"
+    mode: "udp"
+
+transforms:
+  parse_syslog:
+    type: "remap"
+    inputs: ["syslog_in"]
+    source: |
+      . = parse_syslog!(string!(.message))
+
+sinks:
+  kafka_out:
+    type: "kafka"
+    inputs: ["parse_syslog"]
+    bootstrap_servers: "kafka:9092"   # IMPORTANT: string, NOT array
+    topic: "syslog_raw"
+    encoding:
+      codec: "json"
+
+  debug_print:
+    type: "console"
+    inputs: ["parse_syslog"]
+    encoding:
+      codec: "json"
+      json:
+        pretty: true
