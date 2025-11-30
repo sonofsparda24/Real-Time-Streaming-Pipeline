@@ -1,12 +1,20 @@
-version: "3.8"
+version: "3.9"
 
 services:
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    ports:
+      - "514:514/udp"
+    volumes:
+      - ./docker/vector/vector.toml:/etc/vector/vector.toml:ro
+    depends_on:
+      - kafka
+    networks:
+      - pipeline-net
 
-  ############################################################
-  # ZOOKEEPER
-  ############################################################
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -14,107 +22,70 @@ services:
     ports:
       - "2181:2181"
     networks:
-      - bigdata-network
+      - pipeline-net
 
-  ############################################################
-  # KAFKA (using named volumes)
-  ############################################################
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
     depends_on:
       - zookeeper
-    ports:
-      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-
-      # Recommended listener settings
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-
-      # Safe for single-node cluster
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
-      # Auto-create topics if desired
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-      - kafka_logs:/var/lib/kafka/logs
-
-    networks:
-      - bigdata-network
-
-  ############################################################
-  # VECTOR (replaces syslog-ng)
-  ############################################################
-  vector:
-    image: timberio/vector:latest-alpine
-    container_name: vector
-    command: ["--config", "/etc/vector/vector.yaml"]
     ports:
-      - "5514:5514/udp"
-    volumes:
-      - ./docker/vector/config/vector.yaml:/etc/vector/vector.yaml:ro
+      - "9092:9092"
+    networks:
+      - pipeline-net
+
+  spark:
+    build:
+      context: ./docker/spark
+      dockerfile: Dockerfile
+    container_name: spark
     depends_on:
       - kafka
-    restart: unless-stopped
-    networks:
-      - bigdata-network
-
-  ############################################################
-  # SPARK MASTER
-  ############################################################
-  spark-master:
-    image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
-    container_name: spark-master
-    entrypoint:
-      ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
-    environment:
-      SPARK_NO_DAEMONIZE: "true"
-    ports:
-      - "7077:7077"
-      - "8080:8080"
     volumes:
-      - ./spark/:/opt/spark-apps/
+      - ./spark:/opt/spark-app
     networks:
-      - bigdata-network
+      - pipeline-net
+    command: >
+      /bin/bash -c "
+      /opt/spark/bin/spark-submit
+      --master local[*]
+      /opt/spark-app/stream_syslog.py
+      "
 
-  ############################################################
-  # SPARK WORKER
-  ############################################################
-  spark-worker:
-    image: apache/spark:3.5.7-scala2.12-java11-python3-ubuntu
-    container_name: spark-worker
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    volumes:
+      - ./docker/hdfs/namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=cluster1
+    ports:
+      - "9870:9870"
+    networks:
+      - pipeline-net
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
     depends_on:
-      - spark-master
-    entrypoint:
-      [
-        "/opt/spark/bin/spark-class",
-        "org.apache.spark.deploy.worker.Worker",
-        "spark://spark-master:7077"
-      ]
-    environment:
-      SPARK_NO_DAEMONIZE: "true"
-    ports:
-      - "8081:8081"
+      - namenode
     volumes:
-      - ./spark/:/opt/spark-apps/
+      - ./docker/hdfs/datanode:/hadoop/dfs/data
+    environment:
+      - CLUSTER_NAME=cluster1
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    ports:
+      - "9864:9864"
     networks:
-      - bigdata-network
+      - pipeline-net
 
 networks:
-  bigdata-network:
+  pipeline-net:
     driver: bridge
-
-#############################################################
-# NAMED VOLUMES (FIXED KAFKA METADATA ISSUES)
-#############################################################
-volumes:
-  kafka_data:
-  kafka_logs:
