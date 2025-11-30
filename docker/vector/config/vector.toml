@@ -1,24 +1,30 @@
 # VECTOR – Receive syslog & send to Kafka
 
-# Receive syslog via UDP 514
 [sources.syslog_udp]
 type = "syslog"
+mode = "udp"
 address = "0.0.0.0:514"
 
-# Parse syslog into structured JSON
 [transforms.parse_syslog]
 type = "remap"
 inputs = ["syslog_udp"]
 source = '''
-structured = parse_syslog!(.message)
-.delim = null
-.message = structured
+# Try parsing syslog
+structured, err = parse_syslog(.message)
+
+# If parsing succeeded, merge structured fields into event
+if err == null {
+  . = merge(., structured)
+} else {
+  .parse_error = err
+}
 '''
 
-# Send JSON logs to Kafka
 [sinks.kafka_out]
-inputs = ["parse_syslog"]
 type = "kafka"
-bootstrap_servers = ["kafka:9092"]
+inputs = ["parse_syslog"]
+bootstrap_servers = "kafka:9092"
 topic = "syslog_raw"
-encoding.codec = "json"
+
+[sinks.kafka_out.encoding]
+codec = "json"

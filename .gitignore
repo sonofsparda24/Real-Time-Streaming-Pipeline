@@ -1,110 +1,14 @@
-# ===============================
-# Python
-# ===============================
+# Docker
+docker/vector/logs/
+docker/vector/config/vector.toml.bak
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.egg
-*.egg-info/
-dist/
-build/
-.env
-.venv
-venv/
-ENV/
-
-# ===============================
-# Virtual environments
-# ===============================
-*.sqlite
-pip-log.txt
-pip-delete-this-directory.txt
-
-# ===============================
-# Spark
-# ===============================
+*.log
+.DS_Store
+.idea/
+.vscode/
 spark-warehouse/
 metastore_db/
 derby.log
-eventLogs/
-checkpoint/
-checkpoints/
 tmp/
-tmp_spark/
-
-# ===============================
-# HDFS output directories (local)
-# ===============================
-hdfs/data/
-hdfs/tmp/
-hdfs/namenode/
-hdfs/datanode/
-
-# ===============================
-# Docker
-# ===============================
-docker/hdfs/namenode/*
-docker/hdfs/datanode/*
-docker/kafka/data/
-docker/kafka/logs/
-docker/syslog-ng/*.log
-docker/*/tmp/
-
-# But keep configuration files
-!docker/syslog-ng/syslog-ng.conf
-!docker/spark/Dockerfile
-!docker/spark/requirements.txt
-
-# ===============================
-# Logs
-# ===============================
-*.log
-logs/
-syslog-ng/*.log
-spark/logs/
-
-# ===============================
-# Jupyter Notebooks
-# ===============================
-.ipynb_checkpoints/
-notebooks/.ipynb_checkpoints/
-
-# ===============================
-# VS Code
-# ===============================
-.vscode/
-*.code-workspace
-
-# ===============================
-# JetBrains IDEs
-# ===============================
-.idea/
-*.iml
-
-# ===============================
-# OS-generated
-# ===============================
-.DS_Store
-Thumbs.db
-
-# ===============================
-# Security
-# ===============================
-*.pem
-*.key
-*.crt
-
-# ===============================
-# Notebooks outputs
-# ===============================
-*/.ipynb_checkpoints
-
-# ===============================
-# Archive files
-# ===============================
-*.tar
-*.gz
-*.zip
-*.rar
-*.7z
+checkpoint/

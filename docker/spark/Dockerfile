@@ -1,10 +1,7 @@
-FROM spark:scala
+FROM apache/spark:4.1.0-preview4-scala2.13-java21-python3-r-ubuntu
 
-# Install Python3 + pip
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    apt-get clean
+USER root
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir kafka-python
 
-# Install Python requirements
-COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+USER spark
