@@ -1,4 +1,4 @@
-# Real-Time-Streaming-Pipeline# Real-Time Syslog Streaming Pipeline
+# Real-Time Syslog Streaming Pipeline
 
 [![syslog-ng](https://img.shields.io/badge/syslog--ng-Log%20Collector-0A6D92?style=for-the-badge&logo=syslog-ng)](https://www.syslog-ng.com/)
 [![Kafka](https://img.shields.io/badge/Apache_Kafka-Streaming-000000?style=for-the-badge&logo=apachekafka)](https://kafka.apache.org/)
